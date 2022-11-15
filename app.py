@@ -1,9 +1,19 @@
 from flask import Flask, render_template, request, jsonify
 app = Flask(__name__)
 
+from dotenv import load_dotenv
+import os
 from pymongo import MongoClient
-client = MongoClient('mongodb+srv://spartaA5:99a5@todomini.88lewxp.mongodb.net/?retryWrites=true&w=majority')
-db = client.dbsparta
+import certifi
+
+load_dotenv()
+DB = os.getenv('DB')
+client = MongoClient(DB, tlsCAFile=certifi.where())
+
+db = client.dbminiW1
+
+
+print("success")
 
 @app.route('/')
 def home():
