@@ -39,12 +39,29 @@
         width: 47%;
     }
 
-    #floatingUsername, #floatingId, #floatingMail {
-        width: 80%;
+    #floatingUsername, #floatingId {
+        width: 60%;
+        margin-right: 19px;
     }
 
-    .check_area {
+    #floatingMail {
+        width: 77%;
+    }
+
+    .check-area-1 {
+        display: flex;
+        flex-direction: row;
+        justify-content: start;
+        align-items: center;
+    }
+
+    .check-area-2 {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-secondary {
+        font-size: 20px;
     }
