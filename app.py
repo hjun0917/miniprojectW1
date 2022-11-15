@@ -15,47 +15,52 @@ def home():
     return render_template('main.html')
 
 
+# 회원가입 페이지 이동
 @app.route('/signup')
 def sign_up():
     return render_template('signup.html')
 
 
+# 아이디 중복검사
 @app.route('/api/checkid', methods=['POST'])
 def check_id():
-    c_id = 0
+    status_name = True
     id_receive = request.form['id_give']
     users = list(db.user.find({}, {'_id': False}))
     for user in users:
         user_id = user['id']
         if user_id == id_receive:
-            c_id = 1
-    return jsonify({'result': 'success', 'status': c_id})
+            status_name = False
+    return jsonify({'result': 'success', 'status': status_name})
 
 
+# 닉네임 중복검사
 @app.route('/api/checkname', methods=['POST'])
 def check_name():
-    c_name = 0
+    status_name = True
     name_receive = request.form['name_give']
     users = list(db.user.find({}, {'_id': False}))
     for user in users:
         user_name = user['user_name']
         if user_name == name_receive:
-            c_name = 1
-    return jsonify({'result': 'success', 'status': c_name})
+            status_name = False
+    return jsonify({'result': 'success', 'status': status_name})
 
 
+# 이메일 중복 검사
 @app.route('/api/checkmail', methods=['POST'])
 def check_mail():
-    c_mail = 0
+    status_mail = True
     mail_receive = request.form['mail_give']
     users = list(db.user.find({}, {'_id': False}))
     for user in users:
         user_mail = user['mail']
         if user_mail == mail_receive:
-            c_mail = 1
-    return jsonify({'result': 'success', 'status': c_mail})
+            status_mail = False
+    return jsonify({'result': 'success', 'status': status_mail})
 
 
+# 회원 정보 저장
 @app.route('/api/signup', methods=['POST'])
 def join():
     id_receive = request.form['id_give']
