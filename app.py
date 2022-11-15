@@ -6,6 +6,16 @@ import os
 from pymongo import MongoClient
 import certifi
 
+from flask import Flask, render_template, jsonify
+
+from routes.login import login
+from routes.main import main
+from routes.sign_up import sign_up
+
+app.register_blueprint(login, url_prefix="/login")
+app.register_blueprint(main, url_prefix="/main")
+app.register_blueprint(sign_up, url_prefix="/sign_up")
+
 load_dotenv()
 DB = os.getenv('DB')
 client = MongoClient(DB, tlsCAFile=certifi.where())
@@ -33,6 +43,14 @@ def todo_post():
 def sample_get():
     todoList = list(db.todo.find({}, {'_id': False}))
     return jsonify(todoList)
+
+@app.route("/tododone", methods=["POST"])
+def done_post():
+    item_num = request.form['give_itemNum']
+    type(item_num)
+    db.todo.update_one({'num':item_num},{'$set':{'done':1}})
+
+    return jsonify({'msg': '목표 달성!'});
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=1500, debug=True)
