@@ -168,16 +168,22 @@
             });
         }
         */
-        /*포스트 sample
-        $.ajax({
+        $(function(){
+            $('.inputTodoBtn').click(function(){
+                let text = $('#todoInputText').val();
+
+                $.ajax({
                 type: 'POST',
-                url: '/homework',
-                data: {name_give: name, comment_give: comment},
+                url: '/todo',
+                data: {todo_tesk: text},
                 success: function (response) {
                     alert(response['msg'])
                     window.location.reload()
                 }
-            });*/
+                });
+            })
+        })
+
     </script>
 </head>
 <body style="height: unset; overflow-x: auto; overflow-y: scroll;">
@@ -211,7 +217,7 @@
                 <div class="todo_subject">ToDo List<span id="today"style="text-align: right;">00시 00분</span></div>
                 <div class="todo_input">
                     <input id="todoInputText" type="text" placeholder="할 일을 입력해주세요 :)">
-                    <button type="button" class="btn btn-outline-dark">추가</button>
+                    <button type="button" class="inputTodoBtn btn btn-outline-dark">추가</button>
                 </div>
                 <div class="todo_listDiv">
                         <div class="todo_item">
