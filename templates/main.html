@@ -154,20 +154,28 @@
             const month = Date().split(" ")[1];
             const date = Date().split(" ")[2]
             $('#today').text(`${year}. ${month}. ${date}.`);
+            todoLoad();
         });
-        /*
-        function set_temp() {
+
+        function todoLoad() {
             $.ajax({
                 type: "GET",
-                url: "http://spartacodingclub.shop/sparta_api/weather/seoul",
+                url: "/todo",
                 data: {},
                 success: function (response) {
-                    let temp_seoul = response['temp'];
-                    $('#temp_seoul').text(temp_seoul);
+                    for (item of response) {
+                        let todoItem = item['todo_tesk'];
+                        let temp_html = `<div class="todo_item">
+                                            <div>${todoItem}</div>
+                                            <button type="button" class="btn btn-outline-dark">완료</button>
+                                        </div>`;
+                        $('.todo_listDiv').append(temp_html);
+                    }
+
                 }
             });
         }
-        */
+
         $(function(){
             $('.inputTodoBtn').click(function(){
                 let text = $('#todoInputText').val();

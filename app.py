@@ -19,10 +19,10 @@ def todo_post():
 
     return jsonify({'msg': '작성 완료!'})
 
-@app.route("/sample", methods=["GET"])
+@app.route("/todo", methods=["GET"])
 def sample_get():
-    cheer_comments = list(db.fancomments.find({}, {'_id': False}))
-    return jsonify(cheer_comments)
+    todoList = list(db.todo.find({}, {'_id': False}))
+    return jsonify(todoList)
 
 if __name__ == '__main__':
-    app.run('0.0.0.0', port=3000, debug=True)
+    app.run('0.0.0.0', port=1500, debug=True)
