@@ -81,6 +81,7 @@ function check_id() {
                 } else {
                     alert('이미 존재하는 아이디 입니다.')
                     document.getElementById('floatingId').value = null;
+                    document.getElementById("floatingId").focus()
                 }
             }
         })
@@ -109,6 +110,7 @@ function check_username() {
                 } else {
                     alert('이미 존재하는 닉네임 입니다.')
                     document.getElementById('floatingUsername').value = null;
+                    document.getElementById("floatingUsername").focus()
                 }
             }
         })
@@ -140,6 +142,7 @@ function check_mail() {
                 } else {
                     alert('이미 존재하는 이메일 입니다.')
                     document.getElementById('floatingMail').value = null;
+                    document.getElementById("floatingMail").focus()
                 }
             }
         })
@@ -152,8 +155,14 @@ function check_pw1() {
     let pattern1 = /[0-9]/
     let pattern2 = /[a-zA-Z]/
 
-    if (user_pw.length < 8 || !pattern1.test(user_pw) || !pattern2.test(user_pw)) {
-        alert('비밀번호는 8자리 이상 영문과 숫자로 입력해주세요.')
+    let user_id = $('#floatingId').val()
+
+    if (user_pw.length < 10 || !pattern1.test(user_pw) || !pattern2.test(user_pw)) {
+        alert('비밀번호는 10자리 이상 영문과 숫자로 입력해주세요.')
+        document.getElementById("floatingPassword").value = null;
+        document.getElementById("floatingPassword").focus()
+    } else if (user_pw === user_id) {
+        alert('비밀번호에 아이디가 포함될 수 없습니다.')
         document.getElementById("floatingPassword").value = null;
         document.getElementById("floatingPassword").focus()
     } else {
