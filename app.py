@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify,session, redirect, url_for
 
 from dotenv import load_dotenv
 import os
@@ -20,13 +20,95 @@ client = MongoClient(DB, tlsCAFile=certifi.where())
 db = client.dbminiW1
 
 
-@app.route("/")
-def home():
-    return render_template('cover.html')
+SECRET_KEY = 'SPARTA'
+
+import jwt
+
+import datetime
+
+import hashlib
+
+@app.route('/')
+def firstpage():
+    return render_template('firstpage.html')
+
+
+@app.route('/login')
+def login():
+    msg = request.args.get('msg')
+    return render_template('login.html', msg=msg)
 
 @app.route("/main/")
 def main_home():
-    return render_template('main.html') 
+    return render_template('main.html')
+
+@app.route('/login')
+def signup_in_login():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        user_info = db.user.find_one({"id": payload['id']})
+        return render_template('main.html', nickname=user_info["nick"])
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for('firstpage', msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("firstpage", msg="로그인 정보가 존재하지 않습니다."))
+
+
+#형준님 회원가입 페이지 로 봐야하는부분입니다
+@app.route('/api/signup', methods=['POST'])
+def api_register():
+    id_receive = request.form['id_give']
+    pw_receive = request.form['pw_give']
+    nickname_receive = request.form['nickname_give']
+
+    pw_hash = hashlib.sha256(pw_receive.encode('utf-8')).hexdigest()
+
+    db.user.insert_one({'id': id_receive, 'pw': pw_hash, 'nick': nickname_receive})
+
+    return jsonify({'result': 'success'})
+
+
+#아이디 비밀번호를 받아오며
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    id_receive = request.form['id_give']
+    pw_receive = request.form['pw_give']
+
+    pw_hash = hashlib.sha256(pw_receive.encode('utf-8')).hexdigest() #비밀번호를 암호화
+
+    result = db.user.find_one({'id': id_receive, 'pw': pw_hash})
+
+    if result is not None:
+
+        payload = {
+            'id': id_receive,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=5) #로그인이 얼만큼 유지가 되는가
+        }
+        token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
+
+        return jsonify({'result': 'success', 'token': token})
+
+
+    else:
+        return jsonify({'result': 'fail', 'msg': '아이디/비밀번호가 일치하지 않습니다.'})
+
+#db에서 비밀번호를 디코딩해서 저장되있는 id값 및 닉네임 값을 가져옴
+@app.route('/api/nick', methods=['GET'])
+def api_valid():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        print(payload)
+
+        userinfo = db.user.find_one({'id': payload['id']}, {'_id': 0})
+        return jsonify({'result': 'success', 'nickname': userinfo['nick']})
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
+    except jwt.exceptions.DecodeError:
+        return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
 
 @app.route("/main/todo", methods=["POST"])
 def todo_post():
