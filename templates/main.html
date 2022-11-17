@@ -267,9 +267,8 @@
                 success: function (response) {
                     console.log(response)
                     // 추가된 부분 웰컴 인사
-                    const welcomeTxt = `Hello, ${response['nickname']}!`;
+                    const welcomeTxt = `Hello, {{nickname}}`;
                     $('.greeting').append(welcomeTxt);
-
 
                     for (item of response['todoList']) {
                         console.log(item)
@@ -426,7 +425,7 @@
                     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
             </div>
-                <div class="greeting">{{nickname}}</div>
+                <div class="greeting"></div>
                 <div class="header_title">오늘 Do? 내일 Do!</div>
                 <div class="logOutDiv">
                     <button type="button" class="logOutBtn btn btn-dark" onclick="signOut()">로그아웃</button>

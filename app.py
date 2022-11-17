@@ -44,11 +44,32 @@ def sign_up():
     return render_template('signup.html')
 @app.route("/main/")
 def main_home():
-    return render_template('main.html')
+
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        user_info = db.user.find_one({"id": payload['id']})
+        return render_template('main.html', nickname=user_info["user_name"])
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for('login', msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 @app.route('/login/')
 def login():
     msg = request.args.get('msg')
     return render_template('login.html', msg=msg)
+
+# 비밀번호 찾기를 위한 회원 검증 과정
+@app.route('/checkinfo')
+def check_info():
+    return render_template('checkinfo.html')
+
+
+# 비밀번호 찾기를 위한 회원 검증이 끝나면 비밀번호 변경 페이지로 이동
+@app.route('/updatepw/<user_id>')
+def update_pw(user_id):
+    id_receive = request.form.get('user_id')
+    return render_template('updatepw.html', id=user_id)
 
 # 아이디 중복검사
 @app.route('/api/checkid', methods=['POST'])
@@ -92,6 +113,7 @@ def check_mail():
 # 회원 정보 저장
 @app.route('/api/signup', methods=['POST'])
 def join():
+    interest_receive = request.form['interest_give']
     id_receive = request.form['id_give']
     name_receive = request.form['name_give']
     mail_receive = request.form['mail_give']
@@ -99,11 +121,35 @@ def join():
 
     # 패스워드 단방향 암호화
     pw_hash = hashlib.sha256(pw_receive.encode('utf-8')).hexdigest()
-    
-    db.user.insert_one({'id': id_receive, 'user_name': name_receive, 'mail': mail_receive, 'pw': pw_hash})
+
+    db.user.insert_one({'id': id_receive, 'user_name': name_receive, 'interest': interest_receive, 'mail': mail_receive,
+                        'pw': pw_hash})
+
     return jsonify({'result': 'success'})
 
+# 아이디와 메일을 체크해 가입된 회원정보가 있는지 확인한다.
+@app.route('/api/checkinfo', methods=['POST'])
+def check_user():
+    id_receive = request.form['id_give']
+    mail_receive = request.form['mail_give']
+    user = db.user.find_one({'id': id_receive, 'mail': mail_receive}, {'_id': False})
+    if user is not None:
+        return jsonify({'result': 'success'})
+    else:
+        return jsonify({'result': 'false'})
 
+
+# 체크한 아이디의 패스워드를 변경
+@app.route('/api/updatepw', methods=['PATCH'])
+def update_user_pw():
+    id_receive = request.form['id_give']
+    pw_receive = request.form['pw_give']
+
+    pw_hash = hashlib.sha256(pw_receive.encode('utf-8')).hexdigest()
+
+    db.user.update_one({'id': id_receive}, {'$set': {'pw': pw_hash}})
+
+    return jsonify({'result': 'success'})
 
 ###################여기 바꿔야됨
 @app.route('/login')
@@ -159,10 +205,10 @@ def api_valid():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        print('/api/nick')
+        print('api_valid')
 
         userinfo = db.user.find_one({'id': payload['id']}, {'_id': 0})
-        return jsonify({'result': 'success', 'nickname': userinfo['nick']})
+        return jsonify({'result': 'success', 'nickname': userinfo['user_name']})
 
     except jwt.ExpiredSignatureError:
         return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
@@ -174,7 +220,7 @@ def todo_post():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        print('/main/todo'+payload)
+        print('/main/todo')
 
         db.user.find_one({'id': payload['id']}, {'_id': 0})
 
@@ -245,9 +291,6 @@ def done_post():
         return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
     except jwt.exceptions.DecodeError:
         return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
-
-
-
 
 
 #유튜브 키워드 크롤링
