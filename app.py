@@ -23,28 +23,31 @@ from bs4 import BeautifulSoup
 # 동적페이지 크롤링 selenium
 from selenium import webdriver
 
-load_dotenv()
-DB = os.getenv('DB')
-client = MongoClient(DB, tlsCAFile=certifi.where())
+# load_dotenv()
+# DB = os.getenv('DB')
+# client = MongoClient(DB, tlsCAFile=certifi.where())
+# db = client.dbminiW1
 
-db = client.dbminiW1
-# client = MongoClient('mongodb+srv://test:sparta@cluster0.mapsk1p.mongodb.net/Cluster0?retryWrites=true&w=majority')
-# db = client.test
+client = MongoClient('mongodb+srv://test:sparta@cluster0.mapsk1p.mongodb.net/Cluster0?retryWrites=true&w=majority')
+db = client.test
 
 SECRET_KEY = 'SPARTA'
+
 
 # 사이트 시작화면
 @app.route('/')
 def firstpage():
     return render_template('firstpage.html')
 
+
 # 회원가입 페이지 이동
 @app.route('/signup')
 def sign_up():
     return render_template('signup.html')
+
+
 @app.route("/main/")
 def main_home():
-
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
@@ -54,10 +57,12 @@ def main_home():
         return redirect(url_for('login', msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
-@app.route('/login/')
+
+
+@app.route('/login')
 def login():
-    msg = request.args.get('msg')
-    return render_template('login.html', msg=msg)
+    return render_template('login.html')
+
 
 # 비밀번호 찾기를 위한 회원 검증 과정
 @app.route('/checkinfo')
@@ -70,6 +75,7 @@ def check_info():
 def update_pw(user_id):
     id_receive = request.form.get('user_id')
     return render_template('updatepw.html', id=user_id)
+
 
 # 아이디 중복검사
 @app.route('/api/checkid', methods=['POST'])
@@ -127,6 +133,7 @@ def join():
 
     return jsonify({'result': 'success'})
 
+
 # 아이디와 메일을 체크해 가입된 회원정보가 있는지 확인한다.
 @app.route('/api/checkinfo', methods=['POST'])
 def check_user():
@@ -151,21 +158,8 @@ def update_user_pw():
 
     return jsonify({'result': 'success'})
 
-###################여기 바꿔야됨
-@app.route('/login')
-def signup_in_login():
-    token_receive = request.cookies.get('mytoken')
-    try:
-        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        user_info = db.user.find_one({"id": payload['id']})
-        return render_template('main.html', nickname=user_info["nick"])
-    except jwt.ExpiredSignatureError:
-        return redirect(url_for('firstpage', msg="로그인 시간이 만료되었습니다."))
-    except jwt.exceptions.DecodeError:
-        return redirect(url_for("firstpage", msg="로그인 정보가 존재하지 않습니다."))
 
-
-#형준님 회원가입 페이지 로 봐야하는부분입니다
+# 형준님 회원가입 페이지 로 봐야하는부분입니다
 @app.route('/api/signup', methods=['POST'])
 def api_register():
     id_receive = request.form['id_give']
@@ -179,27 +173,28 @@ def api_register():
     return jsonify({'result': 'success'})
 
 
-#아이디 비밀번호를 받아오며
+# 아이디 비밀번호를 받아오며
 @app.route('/api/login', methods=['POST'])
 def api_login():
     id_receive = request.form['id_give']
     pw_receive = request.form['pw_give']
 
-    pw_hash = hashlib.sha256(pw_receive.encode('utf-8')).hexdigest() #비밀번호를 암호화
+    pw_hash = hashlib.sha256(pw_receive.encode('utf-8')).hexdigest()  # 비밀번호를 암호화
 
     result = db.user.find_one({'id': id_receive, 'pw': pw_hash})
 
     if result is not None:
         payload = {
             'id': id_receive,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=5) #로그인이 얼만큼 유지가 되는가
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=5)  # 로그인이 얼만큼 유지가 되는가
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
         return jsonify({'result': 'success', 'token': token})
     else:
         return jsonify({'result': 'fail', 'msg': '아이디/비밀번호가 일치하지 않습니다.'})
 
-#db에서 비밀번호를 디코딩해서 저장되있는 id값 및 닉네임 값을 가져옴
+
+# db에서 비밀번호를 디코딩해서 저장되있는 id값 및 닉네임 값을 가져옴
 @app.route('/api/nick', methods=['GET'])
 def api_valid():
     token_receive = request.cookies.get('mytoken')
@@ -214,6 +209,7 @@ def api_valid():
         return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
     except jwt.exceptions.DecodeError:
         return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
+
 
 @app.route("/main/todo", methods=["POST"])
 def todo_post():
@@ -239,8 +235,11 @@ def todo_post():
         return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
 
 
-
-
+@app.route("/main/todo/delete", methods=["DELETE"])
+def todo_delete():
+    num_receive = request.form['num_give']
+    db.todo.delete_one({'num': int(num_receive)})
+    return jsonify({'msg': '삭제 되었습니다.'})
 
 
 
@@ -259,15 +258,16 @@ def sample_get():
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         print('/main/todoload')
-        todoList = list(db.todo.find({'id':payload['id']}, {'_id': False}))
+        todoList = list(db.todo.find({'id': payload['id']}, {'_id': False}))
 
         userinfo = db.user.find_one({'id': payload['id']}, {'_id': 0})
-        return jsonify({ 'todoList': todoList,'result': 'success', 'nickname': userinfo['user_name']})
+        return jsonify({'todoList': todoList, 'result': 'success', 'nickname': userinfo['user_name']})
 
     except jwt.ExpiredSignatureError:
         return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
     except jwt.exceptions.DecodeError:
         return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
+
 
 @app.route("/main/tododone", methods=["POST"])
 def done_post():
@@ -295,7 +295,7 @@ def done_post():
         return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
 
 
-#유튜브 키워드 크롤링
+# 유튜브 키워드 크롤링
 @app.route('/main/movie', methods=["GET"])
 def web_crawling_youtube():
     token_receive = request.cookies.get('mytoken')
@@ -305,7 +305,7 @@ def web_crawling_youtube():
         print('/main/movie')
 
         # 해당 사용자 키워드 조회
-        result = db.user.find_one({'id':payload['id']}, {'_id': False})
+        result = db.user.find_one({'id': payload['id']}, {'_id': False})
         print(result['interest'])
 
         #### 1. 사용자 키워드 및 크롤링 대상 url 세팅 ####
@@ -331,9 +331,9 @@ def web_crawling_youtube():
         driver.quit()
 
         #### 3. 링크주소 추출 및 json 배열화 ####
-        #크롤링 셀렉터 #contents > 는 item 등으로 변경되기에 삭제함
-        #for문도 검색이 2개만 되는 경우가 있어서.. 일단 저렇게 함....
-        #(반성)selector 부분 덩어리 찾고, 타겟을 하나씩 뽑아야 되는데, 타겟부터 뽑아보게 코딩함...
+        # 크롤링 셀렉터 #contents > 는 item 등으로 변경되기에 삭제함
+        # for문도 검색이 2개만 되는 경우가 있어서.. 일단 저렇게 함....
+        # (반성)selector 부분 덩어리 찾고, 타겟을 하나씩 뽑아야 되는데, 타겟부터 뽑아보게 코딩함...
         youtube_links = []
 
         if soup != None:
@@ -342,7 +342,9 @@ def web_crawling_youtube():
             j = 0
             for i in range(0, 2, 1):
                 j += 1
-                crawling_link = soup.select_one('ytd-video-renderer:nth-child(' + str(j) + ') > #dismissible > ytd-thumbnail > #thumbnail')['href'].strip()
+                crawling_link = soup.select_one(
+                    'ytd-video-renderer:nth-child(' + str(j) + ') > #dismissible > ytd-thumbnail > #thumbnail')[
+                    'href'].strip()
                 crawling_link = crawling_link.replace('/watch?v=', '')  # 링크 식별값만 추출
                 youtube_links.append({i: crawling_link})  # append : 배열 뒤로 추가
             youtube_links.append({0: 'jYT7bup2qe0'})  # 죄송합니다...
@@ -361,4 +363,4 @@ def web_crawling_youtube():
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0', port=1500, debug=True)
+    app.run('0.0.0.0', port=5000, debug=True)

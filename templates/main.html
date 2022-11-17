@@ -67,13 +67,6 @@
             outline: 0 !important;
             border-color: white !important;
         }
-        .ham_bar{
-            width: 28px;
-            height: 5px;
-            border-radius: 3px;
-            background-color: var(--themeColor1);
-            margin: 5px auto;
-        }
         .greeting {
             grid-area: greeting;
             font-family: var(--contentFont);
@@ -163,7 +156,7 @@
             margin-bottom: 10px;
         }
         .todo_listDiv > button{
-            font-size: var(--contentFontSize);
+            font-size: var(--contentFontSizeTxt);
         }
         .todo_item > div {
             font-family: var(--contentFont);
@@ -249,6 +242,12 @@
         .hidden{
             visibility: hidden;
         }
+
+        .delete {
+            border: none;
+            background-color: inherit;
+            text-align: center;
+        }
     </style>
     <script>
         $(document).ready(function () {
@@ -261,9 +260,6 @@
         });
 
         function todoLoad() {
-            /*샘플 태그 초기화*/
-             $('.todo_listDiv').empty();
-             $('.recommandMovies').empty();
             /*투두리스트 로딩*/
             $.ajax({
                 type: "GET",
@@ -283,14 +279,16 @@
 
                         let temp_html = "";
                         if (todoDone === 0) {
-                            temp_html = `<div id=container${todoNum} class="todo_item cancle">
-                                            <div>${todoItem} </div>
-                                            <button  type="button" id=btn${todoNum} class="btn btn-outline-dark" onClick="doneTodo(${todoNum})">취소</button>
-                                        </div>`;
-                        } else if (todoDone === 1) {
                             temp_html = `<div id=container${todoNum} class="todoDone done">
                                             <div>${todoItem} </div>
                                             <button type="button" id=btn${todoNum} class="btn btn-outline-dark" onClick="doneTodo(${todoNum})">완료</button>
+                                        </div>`;
+                        } else if (todoDone === 1) {
+                            temp_html = `<div id=container${todoNum} class="todo_item cancle">
+                                            <div>${todoItem} <button class="delete" onclick="tododelete(${todoNum})">🗑</button></div>
+                                            <button type="button" id=btn${todoNum} class="btn btn-outline-dark"
+                                                    onClick="doneTodo(${todoNum})">취소
+                                            </button>
                                         </div>`;
                         }
                         $('.todo_listDiv').append(temp_html);
@@ -299,14 +297,26 @@
             });
         }
 
-        function postTodoBtn(){
+        function tododelete(num) {
+            $.ajax({
+                    type: 'DELETE',
+                    url: '/main/todo/delete',
+                    data: {'num_give': num}, //data: {id_give:'pablaw1234', todo_tesk: text, today: today},
+                    success: function (response) {
+                        alert(response['msg'])
+                        location.reload()
+                    }
+                });
+        }
+
+        function postTodoBtn() {
             const year = Date().split(" ")[3].substring(2, 4);
             const month = Date().split(" ")[1];
             const date = Date().split(" ")[2]
             const today = `${year}-${month}-${date}`;
 
             let text = $('#todoInputText').val();
-            if(text === ""){
+            if (text === "") {
                 alert('할 일을 입력해주세요!');
             } else {
                 $.ajax({
@@ -319,9 +329,10 @@
                     }
                 });
             }
-    }
+        }
 
-        function loadMovie () {
+
+        function loadMovie() {
             /*추천 영상 로딩*/
             $.ajax({
                 type: "GET",
@@ -350,35 +361,11 @@
                                             </div>
                                         </div>`;
                         $('.recommandMovies').append(temp_html);
-                        }
-
                     }
-                });
-        }
 
-        /* 날짜 입력 후 투두리스트 포스트
-        function postTodoBtn(){
-                    const year = Date().split(" ")[3].substring(2, 4);
-                    const month = Date().split(" ")[1];
-                    const date = Date().split(" ")[2]
-                    const today = `${year}-${month}-${date}`;
-
-                    let text = $('#todoInputText').val();
-                    if(text === ""){
-                        alert('할 일을 입력해주세요!');
-                    } else {
-                        $.ajax({
-                            type: 'POST',
-                            url: '/main/todo',
-                            data: {todo_tesk: text, today: today},
-                            success: function (response) {
-                                alert(response['msg'])
-                                location.href='/main'
-                            }
-                        });
-                    }
+                }
+            });
         }
-        */
 
 
  function doneTodo (num){
@@ -432,94 +419,32 @@
     </script>
 </head>
 <body style="height: unset; overflow-x: auto; overflow-y: scroll;">
-        <div class="contentFrame">
-            <div class="header">
-                <!-- offcanvas btn -->
-            <!-- <div class="hamburgerDiv">
-                <button id="hamBtn" class="hamburgerBtn btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasTop" aria-controls="offcanvasTop">
-                    <div class="ham_bar"></div>
-                    <div class="ham_bar"></div>
-                    <div class="ham_bar"></div>
-                </button>
-            </div> -->
-            <!-- offcanvas contents-->
-            <div class="offcanvas offcanvas-top" tabindex="-1" id="offcanvasTop" aria-labelledby="offcanvasTopLabel">
-                <div class="offcanvas-header">
-                    <div style="border: solid 1px black; padding: 10px 5px 0 5px; border-radius: 10px;" class="homeBtn" onclick="location.href='/home'">?? HOME</div>
-                    <div style="border: solid 1px black; padding: 10px 5px 0 5px; border-radius: 10px; " class="todoBtn" onclick="location.href='/main'">?? TODO</div>
-                    <div style="border: solid 1px black; padding: 10px 5px 0 5px; border-radius: 10px;" class="mypageBtn" onclick="location.href='/mypage'">???♂? MY</div>
-                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-                </div>
-            </div>
-                <div class="greeting"></div>
-                <div class="header_title">오늘 Do? 내일 Do!</div>
-                <div class="logOutDiv">
-                    <button type="button" class="logOutBtn btn btn-dark" onclick="signOut()">로그아웃</button>
-                </div>
-            </div>
-            <div class="content">
-                <div class="todoDiv"></div>
-                    <div class="todo_subject">ToDo List<span class="dateMoveBtn" onclick="console.log('어제')"><</span><span id="today"style="text-align: right; cursor:pointer" onclick="console.log('달력표시 예정')">00년00월00일</span><span class="dateMoveBtn" onclick="console.log('내일')">></span></div>
-                    <div class="todo_input">
-                        <input id="todoInputText" type="text" placeholder="할 일을 입력해주세요 :)" maxlength="20">
-                        <button type="button" class="inputTodoBtn btn btn btn-dark" onclick="postTodoBtn()">추가</button>
-                    </div>
-                    <div class="todo_listDiv">
-                            <div class="todoDone todo_item">
-                                <div>저녁 김치찌개 만들기 !</div>
-                                <button type="button" id="num" class="btn btn-outline-dark">취소</button>
-                            </div>
-                            <div class="todo_item">
-                                <div>아침 도시락 미리 싸놓기</div>
-                                <button type="button" id="num" class="doneBtn btn btn-outline-dark">완료</button>
-                            </div>
-                            <div class="todo_item">
-                                <div>매일 일기 쓰기</div>
-                                <button type="button" class="btn btn-outline-dark">완료</button>
-                            </div>
-                            <div class="todo_item">
-                                <div>매일 일기 쓰기</div>
-                                <button type="button" class="btn btn-outline-dark">완료</button>
-                            </div>
-                            <div class="todo_item">
-                                <div>20자 이내로 작성</div>
-                                <button type="button" class="btn btn-outline-dark">완료</button>
-                            </div>
-                    </div>
-
-                <div class="recommandMovies">
-                    <div class="recommandTitle">?? 관심 키워드 영상</div>
-                </div>
-            </div>
-            <div class="footer" style="cursor: pointer;" onclick="moreMovies()">관심 키워드 영상 보기</div>
+<div class="contentFrame">
+    <div class="header">
+        <div class="greeting"></div>
+        <div class="header_title">오늘 Do? 내일 Do!</div>
+        <div class="logOutDiv">
+            <button type="button" class="logOutBtn btn btn-dark" onclick="signOut()">로그아웃</button>
         </div>
+    </div>
+    <div class="content">
+        <div class="todoDiv"></div>
+        <div class="todo_subject">ToDo List<span class="dateMoveBtn" onclick="console.log('어제')"><</span><span
+                id="today" style="text-align: right; cursor:pointer"
+                onclick="console.log('달력표시 예정')">00년00월00일</span><span class="dateMoveBtn"
+                                                                       onclick="console.log('내일')">></span></div>
+        <div class="todo_input">
+            <input id="todoInputText" type="text" placeholder="할 일을 입력해주세요 :)" maxlength="20">
+            <button type="button" class="inputTodoBtn btn btn btn-dark" onclick="postTodoBtn()">추가</button>
+        </div>
+        <div class="todo_listDiv">
+
+        </div>
+        <div class="recommandMovies">
+            <div class="recommandTitle">?? 관심 키워드 영상</div>
+        </div>
+    </div>
+    <div class="footer" style="cursor: pointer;" onclick="moreMovies()">관심 키워드 영상 보기</div>
+</div>
 </body>
 </html>
-
-<!--                  <div class="interest_subject1">
-                        <div class="cardItem" style="width: 357px;">
-                            <iframe width="355" height="215" src="https://www.youtube.com/embed/I82pbW2y_cc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                            <div class="cardItem-body">
-                              <h5 class="cardItem-title">추천 영상1</h5>
-                              <a href="#" class="btn btn-outline-dark">크게 보러가기</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="interest_subject2">
-                        <div class="cardItem" style="width: 357px;">
-                            <iframe width="355" height="215" src="https://www.youtube.com/embed/I82pbW2y_cc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                            <div class="cardItem-body">
-                              <h5 class="cardItem-title">추천 영상2</h5>
-                              <a href="#" class="btn btn-outline-dark">크게 보러가기</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="interest_subject3">
-                        <div class="cardItem" style="width: 357px;">
-                            <iframe width="355" height="215" src="https://www.youtube.com/embed/I82pbW2y_cc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                            <div class="cardItem-body">
-                              <h5 class="cardItem-title">추천 영상3</h5>
-                              <a href="#" class="btn btn-outline-dark">크게 보러가기</a>
-                            </div>
-                        </div>
-                    </div>-->

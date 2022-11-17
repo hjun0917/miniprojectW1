@@ -22,66 +22,66 @@
 <style>
 
 
+    * {
+        font-family: 'Do Hyeon', sans-serif;
+    }
+
+        body {
+        background-color: #f4eded;
+    }
+
     .mypost {
+        background-color: white;
         width: 95%;
-        max-width: 500px;
-        height: 550px;
+        max-width: 450px;
+        height: 500px;
         margin: 150px auto auto auto;
         padding: 20px;
         box-shadow: 0 0 3px 0 gray;
         border-radius: 20px;
-
-
     }
 
     .title {
-
-        font-family: 'Do Hyeon', sans-serif;
-        font-size: 50px;
+        font-size: 30px;
         color: burlywood;
-        margin: 50px auto 70px auto;
+        margin: 40px auto 0 auto;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+    }
 
-
+    .sub-title {
+        font-size: 20px;
+        margin: 20px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
     }
 
     .login01 {
-        font-family: 'Dongle', sans-serif;
-        font-size: 30px;
+        font-size: 20px;
     }
 
-    .threebtn {
-
-        margin: 50px 0px 50px 0px;
-        font-size: 30px;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-
-    }
-
-    .threebtn > a {
-
-
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        margin-left: 10px;
-
-
-    }
 
     .login-check {
         margin-top: 50px;
     }
 
-    .sign {
-        font-size: 25px;
+    .btn-group {
+        display: flex;
+        flex-direction: row;
+        justify-content: right;
+        align-items: center;
+        margin: 15px 5px;
+    }
+
+    .btn-group > a {
+        padding: 5px;
+        margin-left: 10px;
+        text-decoration: none;
+        color: black;
     }
 
 
@@ -113,6 +113,7 @@
 <body>
 <div class="mypost">
     <h1 class="title" type="button" onclick="location.href='/'">오늘DO? 내일DO!</h1>
+    <h2 class="sub-title">로그인</h2>
     <div class="login01">
         <div class="sign">
             <div class="form-floating mb-3">
@@ -125,7 +126,7 @@
 
             </div>
         </div>
-        <div class="threebtn">
+        <div class="btn-group">
             <a type="button" href="/checkinfo">비밀번호 찾기</a>
             <a type="button" href="/signup">회원가입</a>
         </div>
