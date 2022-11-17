@@ -282,8 +282,10 @@ def done_post():
         print(doneNum)
         if doneNum == 1:
             db.todo.update_one({'num': item_num}, {'$set': {'done': 0}})
-        elif doneNum == 0:
+            doneNum = 1
+        else:
             db.todo.update_one({'num': item_num}, {'$set': {'done': 1}})
+            doneNum = 0
 
         return jsonify({'doneNum': doneNum});
 
@@ -329,16 +331,24 @@ def web_crawling_youtube():
         driver.quit()
 
         #### 3. 링크주소 추출 및 json 배열화 ####
+        #크롤링 셀렉터 #contents > 는 item 등으로 변경되기에 삭제함
+        #for문도 검색이 2개만 되는 경우가 있어서.. 일단 저렇게 함....
+        #(반성)selector 부분 덩어리 찾고, 타겟을 하나씩 뽑아야 되는데, 타겟부터 뽑아보게 코딩함...
         youtube_links = []
+
         if soup != None:
+            print('여긴 if인데')
             i = 0
             j = 0
-            for i in range(0, 3, 1):
+            for i in range(0, 2, 1):
                 j += 1
-                crawling_link = soup.select_one('#contents > ytd-video-renderer:nth-child(' + str(
-                    j) + ') > #dismissible > ytd-thumbnail > #thumbnail')['href'].strip()
+                crawling_link = soup.select_one('ytd-video-renderer:nth-child(' + str(j) + ') > #dismissible > ytd-thumbnail > #thumbnail')['href'].strip()
                 crawling_link = crawling_link.replace('/watch?v=', '')  # 링크 식별값만 추출
                 youtube_links.append({i: crawling_link})  # append : 배열 뒤로 추가
+            youtube_links.append({0: 'jYT7bup2qe0'})  # 죄송합니다...
+        else:
+            youtube_links.append({0: 'jYT7bup2qe0'})  # 죄송합니다...
+            print('이게 아닌데...')
 
         print(youtube_links)
 
