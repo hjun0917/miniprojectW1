@@ -20,7 +20,7 @@ import datetime
 # html 예쁘게 긁어오기 bs4
 from bs4 import BeautifulSoup
 
-# 동적페에지 크롤링 selenium
+# 동적페이지 크롤링 selenium
 from selenium import webdriver
 
 load_dotenv()
@@ -28,22 +28,27 @@ DB = os.getenv('DB')
 client = MongoClient(DB, tlsCAFile=certifi.where())
 
 db = client.dbminiW1
+# client = MongoClient('mongodb+srv://test:sparta@cluster0.mapsk1p.mongodb.net/Cluster0?retryWrites=true&w=majority')
+# db = client.test
 
 SECRET_KEY = 'SPARTA'
 
-
-
-# 사이트 시작화면 
+# 사이트 시작화면
 @app.route('/')
 def firstpage():
     return render_template('firstpage.html')
-
 
 # 회원가입 페이지 이동
 @app.route('/signup')
 def sign_up():
     return render_template('signup.html')
-
+@app.route("/main/")
+def main_home():
+    return render_template('main.html')
+@app.route('/login/')
+def login():
+    msg = request.args.get('msg')
+    return render_template('login.html', msg=msg)
 
 # 아이디 중복검사
 @app.route('/api/checkid', methods=['POST'])
@@ -99,15 +104,8 @@ def join():
     return jsonify({'result': 'success'})
 
 
-@app.route("/main/")
-def main_home():
-    return render_template('main.html')
-    
-@app.route('/login')
-def login():
-    msg = request.args.get('msg')
-    return render_template('login.html', msg=msg)
 
+###################여기 바꿔야됨
 @app.route('/login')
 def signup_in_login():
     token_receive = request.cookies.get('mytoken')
@@ -146,17 +144,12 @@ def api_login():
     result = db.user.find_one({'id': id_receive, 'pw': pw_hash})
 
     if result is not None:
-
         payload = {
             'id': id_receive,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=5) #로그인이 얼만큼 유지가 되는가
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
-
-
         return jsonify({'result': 'success', 'token': token})
-
-
     else:
         return jsonify({'result': 'fail', 'msg': '아이디/비밀번호가 일치하지 않습니다.'})
 
@@ -178,47 +171,77 @@ def api_valid():
 
 @app.route("/main/todo", methods=["POST"])
 def todo_post():
+    id_receive = request.form['id_give']
     todo_tesk = request.form['todo_tesk']
     today = request.form['today']
-
+    print(todo_tesk, today)
     num = len(list(db.todo.find({},{'_id':False}))) + 1
     done = 0
-    doc = {'today': today, 'todo_tesk': todo_tesk, 'num': num, 'done': done}
+    doc = {'id':id_receive, 'today': today, 'todo_tesk': todo_tesk, 'num': num, 'done': done}
     db.todo.insert_one(doc)
+    return jsonify({'msg': '할 일 등록!'})
 
 
+# @app.route("/main/todoload", methods=["GET"])
+# def sample_get():
+#     #호진작업(끝난듯)
+#     id_receive = request.args.get('id_give')
+#     todoList = list(db.todo.find({'id': id_receive}, {'_id': False}))
+#     #print(todoList)
+#
+#     return jsonify(todoList)
 
-@app.route("/main/todo", methods=["GET"])
+@app.route("/main/todoload", methods=["GET"])
 def sample_get():
-    todoList = list(db.todo.find({}, {'_id': False}))
-    return jsonify(todoList)
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        print(payload)
+        todoList = list(db.todo.find({'id':payload['id']}, {'_id': False}))
+
+        userinfo = db.user.find_one({'id': payload['id']}, {'_id': 0})
+        return jsonify({ 'todoList': todoList,'result': 'success', 'nickname': userinfo['user_name']})
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
+    except jwt.exceptions.DecodeError:
+        return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
 
 @app.route("/main/tododone", methods=["POST"])
 def done_post():
+    id_receive = request.form['id_give']
     item_num = int(request.form['give_itemNum'])
-    doneNum = db.todo.find_one({'num':item_num})['done']
-    
+
+    doneNum = db.todo.find_one({'id':id_receive,'num':item_num})['done']
+    print(doneNum)
     if doneNum == 1:
         db.todo.update_one({'num':item_num},{'$set':{'done':0}})
     elif doneNum == 0:
         db.todo.update_one({'num':item_num},{'$set':{'done':1}})
         
-
-    return jsonify({'msg': 'Todo 갱신'});
+    return jsonify({'doneNum': doneNum});
+    #return jsonify({'msg': 'Todo 갱신'});
 
 
 #유튜브 키워드 크롤링
-@app.route('/crawling', methods=["POST"])
+@app.route('/main/movie', methods=["GET"])
 def web_crawling_youtube():
+    #해당 사용자 키워드 조회
+    id_receive = request.args.get('id_give')
+    result = db.user.find_one({'id': id_receive})
+    print(result['interest'])
+
     #### 1. 사용자 키워드 및 크롤링 대상 url 세팅 ####
-    keyword = '건강'
+    keyword = result['interest']
     target_url = 'https://www.youtube.com/results?search_query=' + keyword
 
     #### 2. 동적페이지 크롤링 ####
     # 옵션 생성
     options = webdriver.ChromeOptions()
-    # 창 숨기는 옵션 추가(백그라운드로 실행, 이걸 하지 않으면 브라우저 열어서 탐색하게 됨)
-    options.add_argument("headless")
+    options.add_argument("headless") # 창 숨기는 옵션 추가(백그라운드로 실행, 이걸 하지 않으면 브라우저 열어서 탐색하게 됨)
+    options.add_argument("--disable-gpu") #gpu 비활성화(gpu 없는 OS)
+    options.add_argument("--disable-popup-blocking") #광고팝업노출X
+    options.add_argument("--blink-settings=imagesEnabled=false") #이미지 다운 X
 
     # driver 실행
     driver = webdriver.Chrome(options=options)
@@ -241,8 +264,8 @@ def web_crawling_youtube():
             crawling_link = crawling_link.replace('/watch?v=', '') #링크 식별값만 추출
             youtube_links.append({i:crawling_link}) #append : 배열 뒤로 추가
 
+    print(youtube_links)
     return jsonify({'ytb_links':youtube_links})
-
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=1500, debug=True)

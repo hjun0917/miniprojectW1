@@ -99,12 +99,10 @@
             success: function (response) {
                 console.log(response['token'])
                 if (response['result'] == 'success') {
-
-                    $.cookie('mytoken', response['token']);
-
+                    $.cookie('mytoken', response['token'], {path: '/'});
 
                     alert('로그인 완료!')
-                    window.location.href = '/mainpage'
+                    window.location.href = '/main'
                 } else {
                     alert(response['msg'])
                 }
@@ -136,7 +134,7 @@
         <div class="threebtn">
             <a type="button">아이디 찾기</a>
             <a type="button">비밀번호 찾기</a>
-            <a type="button" onclick="location.href='/register'">회원가입</a>
+            <a type="button" onclick="location.href='/signup'">회원가입</a>
 
         </div>
         <div class="login-check">
