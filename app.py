@@ -159,7 +159,7 @@ def api_valid():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        print(payload)
+        print('/api/nick')
 
         userinfo = db.user.find_one({'id': payload['id']}, {'_id': 0})
         return jsonify({'result': 'success', 'nickname': userinfo['nick']})
@@ -171,15 +171,31 @@ def api_valid():
 
 @app.route("/main/todo", methods=["POST"])
 def todo_post():
-    id_receive = request.form['id_give']
-    todo_tesk = request.form['todo_tesk']
-    today = request.form['today']
-    print(todo_tesk, today)
-    num = len(list(db.todo.find({},{'_id':False}))) + 1
-    done = 0
-    doc = {'id':id_receive, 'today': today, 'todo_tesk': todo_tesk, 'num': num, 'done': done}
-    db.todo.insert_one(doc)
-    return jsonify({'msg': '할 일 등록!'})
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        print('/main/todo'+payload)
+
+        db.user.find_one({'id': payload['id']}, {'_id': 0})
+
+        todo_tesk = request.form['todo_tesk']
+        today = request.form['today']
+        print(todo_tesk, today)
+        num = len(list(db.todo.find({}, {'_id': False}))) + 1
+        done = 0
+        doc = {'id': payload['id'], 'today': today, 'todo_tesk': todo_tesk, 'num': num, 'done': done}
+        db.todo.insert_one(doc)
+        return jsonify({'msg': '할 일 등록!'})
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
+    except jwt.exceptions.DecodeError:
+        return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
+
+
+
+
+
 
 
 # @app.route("/main/todoload", methods=["GET"])
@@ -196,7 +212,7 @@ def sample_get():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        print(payload)
+        print('/main/todoload')
         todoList = list(db.todo.find({'id':payload['id']}, {'_id': False}))
 
         userinfo = db.user.find_one({'id': payload['id']}, {'_id': 0})
@@ -209,63 +225,87 @@ def sample_get():
 
 @app.route("/main/tododone", methods=["POST"])
 def done_post():
-    id_receive = request.form['id_give']
-    item_num = int(request.form['give_itemNum'])
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        print('/main/tododone')
 
-    doneNum = db.todo.find_one({'id':id_receive,'num':item_num})['done']
-    print(doneNum)
-    if doneNum == 1:
-        db.todo.update_one({'num':item_num},{'$set':{'done':0}})
-    elif doneNum == 0:
-        db.todo.update_one({'num':item_num},{'$set':{'done':1}})
-        
-    return jsonify({'doneNum': doneNum});
-    #return jsonify({'msg': 'Todo 갱신'});
+        item_num = int(request.form['give_itemNum'])
+
+        doneNum = db.todo.find_one({'id': payload['id'], 'num': item_num})['done']
+        print(doneNum)
+        if doneNum == 1:
+            db.todo.update_one({'num': item_num}, {'$set': {'done': 0}})
+        elif doneNum == 0:
+            db.todo.update_one({'num': item_num}, {'$set': {'done': 1}})
+
+        return jsonify({'doneNum': doneNum});
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
+    except jwt.exceptions.DecodeError:
+        return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
+
+
+
 
 
 #유튜브 키워드 크롤링
 @app.route('/main/movie', methods=["GET"])
 def web_crawling_youtube():
-    #해당 사용자 키워드 조회
-    id_receive = request.args.get('id_give')
-    result = db.user.find_one({'id': id_receive})
-    print(result['interest'])
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
 
-    #### 1. 사용자 키워드 및 크롤링 대상 url 세팅 ####
-    keyword = result['interest']
-    target_url = 'https://www.youtube.com/results?search_query=' + keyword
+        print('/main/movie')
 
-    #### 2. 동적페이지 크롤링 ####
-    # 옵션 생성
-    options = webdriver.ChromeOptions()
-    options.add_argument("headless") # 창 숨기는 옵션 추가(백그라운드로 실행, 이걸 하지 않으면 브라우저 열어서 탐색하게 됨)
-    options.add_argument("--disable-gpu") #gpu 비활성화(gpu 없는 OS)
-    options.add_argument("--disable-popup-blocking") #광고팝업노출X
-    options.add_argument("--blink-settings=imagesEnabled=false") #이미지 다운 X
+        # 해당 사용자 키워드 조회
+        result = db.user.find_one({'id':payload['id']}, {'_id': False})
+        print(result['interest'])
 
-    # driver 실행
-    driver = webdriver.Chrome(options=options)
-    driver.get(target_url)
+        #### 1. 사용자 키워드 및 크롤링 대상 url 세팅 ####
+        keyword = result['interest']
+        target_url = 'https://www.youtube.com/results?search_query=' + keyword
 
-    #html 가져오기
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
+        #### 2. 동적페이지 크롤링 ####
+        # 옵션 생성
+        options = webdriver.ChromeOptions()
+        options.add_argument("headless")  # 창 숨기는 옵션 추가(백그라운드로 실행, 이걸 하지 않으면 브라우저 열어서 탐색하게 됨)
+        options.add_argument("--disable-gpu")  # gpu 비활성화(gpu 없는 OS)
+        options.add_argument("--disable-popup-blocking")  # 광고팝업노출X
+        options.add_argument("--blink-settings=imagesEnabled=false")  # 이미지 다운 X
 
-    # driver 종료
-    driver.quit()
+        # driver 실행
+        driver = webdriver.Chrome(options=options)
+        driver.get(target_url)
 
-    #### 3. 링크주소 추출 및 json 배열화 ####
-    youtube_links = []
-    if soup != None:
-        i = 0
-        j = 0
-        for i in  range(0, 3, 1):
-            j += 1
-            crawling_link = soup.select_one('#contents > ytd-video-renderer:nth-child('+str(j)+') > #dismissible > ytd-thumbnail > #thumbnail')['href'].strip()
-            crawling_link = crawling_link.replace('/watch?v=', '') #링크 식별값만 추출
-            youtube_links.append({i:crawling_link}) #append : 배열 뒤로 추가
+        # html 가져오기
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-    print(youtube_links)
-    return jsonify({'ytb_links':youtube_links})
+        # driver 종료
+        driver.quit()
+
+        #### 3. 링크주소 추출 및 json 배열화 ####
+        youtube_links = []
+        if soup != None:
+            i = 0
+            j = 0
+            for i in range(0, 3, 1):
+                j += 1
+                crawling_link = soup.select_one('#contents > ytd-video-renderer:nth-child(' + str(
+                    j) + ') > #dismissible > ytd-thumbnail > #thumbnail')['href'].strip()
+                crawling_link = crawling_link.replace('/watch?v=', '')  # 링크 식별값만 추출
+                youtube_links.append({i: crawling_link})  # append : 배열 뒤로 추가
+
+        print(youtube_links)
+
+        return jsonify({'ytb_links': youtube_links})
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
+    except jwt.exceptions.DecodeError:
+        return jsonify({'result': 'fail', 'msg': '로그인 정보가 존재하지 않습니다.'})
+
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=1500, debug=True)

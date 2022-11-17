@@ -263,7 +263,7 @@
             $.ajax({
                 type: "GET",
                 url: "/main/todoload",
-                data: {id_give:'pablaw1234'}, //고쳐야되]]]]]]]]]]]]]]]]]]]
+                data: {}, //data: {id_give:'pablaw1234'},
                 success: function (response) {
                     console.log(response)
                     // 추가된 부분 웰컴 인사
@@ -308,7 +308,7 @@
                 $.ajax({
                     type: 'POST',
                     url: '/main/todo',
-                    data: {id_give:'pablaw1234', todo_tesk: text, today: today}, //고쳐야돼!!!!!!!!
+                    data: {todo_tesk: text, today: today}, //data: {id_give:'pablaw1234', todo_tesk: text, today: today},
                     success: function (response) {
                         alert(response['msg'])
                         location.reload()
@@ -322,7 +322,7 @@
             $.ajax({
                 type: "GET",
                 url: "/main/movie",
-                data: {id_give:'pablaw1234'}, //고쳐야되]]]]]]]]]]]]]]]]]]]
+                data: {}, //data: {id_give:'pablaw1234'},
                 success: function (response) {
 
                     for (item of response['ytb_links']) {
@@ -381,7 +381,7 @@
             $.ajax({
                         type: 'POST',
                         url: '/main/tododone',
-                        data: {id_give:'pablaw1234', give_itemNum: num, give_itemDone:done},  //고쳐야되]]]]]]]]]]]]]]]]]]]
+                        data: {give_itemNum: num, give_itemDone:done},  //data: {id_give:'pablaw1234', give_itemNum: num, give_itemDone:done},
                         success: function (response) {
                             console.log(response['msg']);
                             window.location.reload()
